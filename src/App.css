@@ -1,0 +1,6 @@
+/* Custom styles for the expense tracker app */
+/* Most styling is handled by Tailwind CSS */
+
+#root {
+  /* Reset default styles that might conflict with Tailwind */
+}
