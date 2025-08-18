@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
+  const navigate=useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // This would come from your auth context
   const location = useLocation();
 
   const toggleMenu = () => {
@@ -11,14 +12,19 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    // Handle logout logic here
-    setIsLoggedIn(false);
+    localStorage.removeItem("jwtToken");
+    navigate("/login");
     console.log('Logout clicked');
   };
 
   // Helper function to check if current route is active
   const isActiveRoute = (path) => {
     return location.pathname === path;
+  };
+
+  const isLoggedInUser = () => {
+    const token = localStorage.getItem("jwtToken");
+    return token !== null && token !== "";
   };
 
   // Helper function to get link classes
@@ -53,7 +59,7 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Navigation */}
-          {isLoggedIn ? (
+          {isLoggedInUser() ? (
             <div className="hidden md:flex items-center space-x-8">
               <Link
                 to="/dashboard"
@@ -151,7 +157,7 @@ const Navbar = () => {
         {isOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-50 rounded-lg mt-2">
-              {isLoggedIn ? (
+              {isLoggedInUser() ? (
                 <>
                   <Link
                     to="/dashboard"

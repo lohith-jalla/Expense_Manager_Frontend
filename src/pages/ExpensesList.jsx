@@ -1,52 +1,45 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const ExpensesList = () => {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    // Fetch expenses data here
-    // This is placeholder data
-    setTimeout(() => {
-      setExpenses([
-        {
-          id: 1,
-          description: 'Grocery Shopping',
-          amount: 125.50,
-          category: 'Food',
-          date: '2024-01-15',
-          paymentMethod: 'Credit Card'
-        },
-        {
-          id: 2,
-          description: 'Gas Station',
-          amount: 45.00,
-          category: 'Transport',
-          date: '2024-01-14',
-          paymentMethod: 'Debit Card'
-        },
-        {
-          id: 3,
-          description: 'Movie Tickets',
-          amount: 28.00,
-          category: 'Entertainment',
-          date: '2024-01-13',
-          paymentMethod: 'Cash'
-        },
-        {
-          id: 4,
-          description: 'Electric Bill',
-          amount: 89.75,
-          category: 'Utilities',
-          date: '2024-01-12',
-          paymentMethod: 'Bank Transfer'
+    const fetchExpenses = async () => {
+      try {
+        const token = localStorage.getItem("jwtToken");
+        if (!token) {
+          setError("Unauthorized. Please login first.");
+          setLoading(false);
+          return;
         }
-      ]);
-      setLoading(false);
-    }, 1000);
+
+        const response = await axios.get("http://localhost:8081/expense", {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        // Fix: Access content from Page<Expense>
+        setExpenses(response.data.content); 
+      } catch (err) {
+        if (err.response && err.response.status === 401) {
+          setError("Unauthorized. Please login again.");
+        } else {
+          setError("Failed to fetch expenses. Please try again later.");
+        }
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExpenses();
   }, []);
 
   const filteredExpenses = expenses.filter(expense => {
@@ -64,6 +57,14 @@ const ExpensesList = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading expenses...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-600 font-medium">
+        {error}
       </div>
     );
   }
@@ -153,14 +154,14 @@ const ExpensesList = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                      {expense.category}
+                      {expense.type}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {expense.date}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {expense.paymentMethod}
+                    {expense.paymentType==null ? "None" : expense.paymentType}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <Link 

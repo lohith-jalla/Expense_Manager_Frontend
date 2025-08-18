@@ -2,12 +2,11 @@ import { useState } from 'react';
 
 const AddExpense = () => {
   const [formData, setFormData] = useState({
+    name:"",
     description: '',
     amount: '',
-    category: '',
+    type: '',
     date: new Date().toISOString().split('T')[0],
-    paymentMethod: '',
-    notes: ''
   });
 
   const categories = [

@@ -1,55 +1,89 @@
+import axios from 'axios';
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate,Link } from 'react-router-dom';
 
 const RecurringList = () => {
+  const navigate = useNavigate();
   const [recurringExpenses, setRecurringExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    // Fetch recurring expenses data here
-    // This is placeholder data
-    setTimeout(() => {
-      setRecurringExpenses([
-        {
-          id: 1,
-          description: 'Netflix Subscription',
-          amount: 15.99,
-          category: 'Entertainment',
-          frequency: 'Monthly',
-          nextDue: '2024-02-01',
-          status: 'Active'
-        },
-        {
-          id: 2,
-          description: 'Electric Bill',
-          amount: 89.75,
-          category: 'Utilities',
-          frequency: 'Monthly',
-          nextDue: '2024-01-25',
-          status: 'Active'
-        },
-        {
-          id: 3,
-          description: 'Car Insurance',
-          amount: 125.00,
-          category: 'Transportation',
-          frequency: 'Monthly',
-          nextDue: '2024-01-30',
-          status: 'Active'
-        },
-        {
-          id: 4,
-          description: 'Gym Membership',
-          amount: 45.00,
-          category: 'Healthcare',
-          frequency: 'Monthly',
-          nextDue: '2024-02-15',
-          status: 'Paused'
-        }
-      ]);
+  const fetchRExpenses = async () => {
+    const token = localStorage.getItem("jwtToken");
+
+    if (!token) {
+      setError("Unauthorized! Please login.");
       setLoading(false);
-    }, 1000);
-  }, []);
+      return;
+    }
+
+    try {
+      const response = await axios.get("http://localhost:8081/expense/RExpense", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // If backend returns Page object with content
+      const expenses = response.data.content || response.data; // fallback
+      setRecurringExpenses(expenses);
+      console.log(expenses);
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setError("Unauthorized. Please login again.");
+      } else if (err.response?.status === 403) {
+        setError("Forbidden. Your token is invalid or expired.");
+      } else {
+        setError("Failed to fetch expenses. Please try again later.");
+      }
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchRExpenses();
+}, []);
+
+
+// Handle Delete R-Expense 
+const handleDelete = async (id) => {
+  const token = localStorage.getItem("jwtToken");
+  if (!token) {
+    setError("Unauthorized. Please login again.");
+    return;
+  }
+
+  const enteredPassword = window.prompt("Please enter your password to confirm deletion:");
+
+  // if user cancelled the prompt or left it empty
+  if(!enteredPassword){
+    return; 
+  }
+
+  try {
+    await axios.delete(`http://localhost:8081/expense/RExpense/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-User-password": enteredPassword
+      }
+    });
+    // Remove from frontend state after successful deletion
+    setRecurringExpenses(expenses => expenses.filter(exp => exp.id !== id));
+  } catch (err) {
+    console.error(err);
+    setError("Failed to delete expense. Try again.");
+  }
+};
+
+
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-600 font-medium">
+        {error}
+      </div>
+    );
+  }
 
   const toggleStatus = (id) => {
     setRecurringExpenses(expenses =>
@@ -62,9 +96,11 @@ const RecurringList = () => {
   };
 
   const getStatusColor = (status) => {
-    return status === 'Active'
-      ? 'bg-green-100 text-green-800'
-      : 'bg-yellow-100 text-yellow-800';
+    if(status === 'Active')
+      return 'bg-green-300 text-green-900'
+    else if(status === "Inactive") 
+      return 'bg-red-300 text-red-900';
+    else return 'bg-yellow-200 text-yellow-900'
   };
 
   if (loading) {
@@ -169,6 +205,9 @@ const RecurringList = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Id
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Description
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -195,6 +234,9 @@ const RecurringList = () => {
               {recurringExpenses.map((expense) => (
                 <tr key={expense.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {expense.id}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {expense.description}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -202,14 +244,14 @@ const RecurringList = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                      {expense.category}
+                      {expense.type}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {expense.frequency}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {expense.nextDue}
+                    {expense.startDate}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(expense.status)}`}>
@@ -226,8 +268,13 @@ const RecurringList = () => {
                     <button className="text-indigo-600 hover:text-indigo-900 mr-4">
                       Edit
                     </button>
-                    <button className="text-red-600 hover:text-red-900">
-                      Delete
+                    <button
+                      onClick={() => {
+                        handleDelete(expense.id)
+                      }}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                    Delete
                     </button>
                   </td>
                 </tr>
@@ -241,3 +288,196 @@ const RecurringList = () => {
 };
 
 export default RecurringList;
+
+
+// import axios from 'axios';
+// import { useState, useEffect } from 'react';
+// import { useNavigate,Link } from 'react-router-dom';
+
+// const RecurringList = () => {
+//   const navigate = useNavigate();
+//   const [recurringExpenses, setRecurringExpenses] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState('');
+
+//   useEffect(() => {
+//     const fetchRExpenses = async () => {
+//       const token = localStorage.getItem("jwtToken");
+
+//       if (!token) {
+//         setError("Unauthorized! Please login.");
+//         setLoading(false);
+//         return;
+//       }
+
+//       try {
+//         const response = await axios.get("http://localhost:8081/expense/RExpense", {
+//           headers: { Authorization: `Bearer ${token}` }
+//         });
+
+//         const expenses = response.data.content || response.data; 
+//         setRecurringExpenses(expenses);
+//       } catch (err) {
+//         if (err.response?.status === 401) {
+//           setError("Unauthorized. Please login again.");
+//         } else if (err.response?.status === 403) {
+//           setError("Forbidden. Your token is invalid or expired.");
+//         } else {
+//           setError("Failed to fetch expenses. Please try again later.");
+//         }
+//         console.error(err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchRExpenses();
+//   }, []);
+
+//   const handleDelete = async (id) => {
+//     const token = localStorage.getItem("jwtToken");
+//     if (!token) {
+//       setError("Unauthorized. Please login again.");
+//       return;
+//     }
+
+//     const enteredPassword = window.prompt("Please enter your password to confirm deletion:");
+//     if(!enteredPassword){
+//       return; 
+//     }
+
+//     try {
+//       await axios.delete(`http://localhost:8081/expense/RExpense/${id}`, {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//           "X-User-password": enteredPassword
+//         }
+//       });
+//       setRecurringExpenses(expenses => expenses.filter(exp => exp.id !== id));
+//     } catch (err) {
+//       console.error(err);
+//       setError("Failed to delete expense. Try again.");
+//     }
+//   };
+
+//   const toggleStatus = (id) => {
+//     setRecurringExpenses(expenses =>
+//       expenses.map(expense =>
+//         expense.id === id
+//           ? { ...expense, status: expense.status === 'Active' ? 'Paused' : 'Active' }
+//           : expense
+//       )
+//     );
+//   };
+
+//   const getStatusColor = (status) => {
+//     if(status === 'Active')
+//       return 'bg-green-300 text-green-900'
+//     else if(status === "Inactive") 
+//       return 'bg-red-300 text-red-900';
+//     else return 'bg-yellow-200 text-yellow-900'
+//   };
+
+//   if (error) {
+//     return (
+//       <div className="min-h-screen flex items-center justify-center text-red-600 font-medium">
+//         {error}
+//       </div>
+//     );
+//   }
+
+//   if (loading) {
+//     return (
+//       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+//           <p className="mt-4 text-gray-600">Loading recurring expenses...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+//       <div className="max-w-7xl mx-auto">
+//         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-3">
+//           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Recurring Expenses</h1>
+//           <Link 
+//             to="/add-recurring"
+//             className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 text-sm"
+//           >
+//             Add Recurring Expense
+//           </Link>
+//         </div>
+
+//         {/* Summary Cards */}
+//         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+//           {/* (same summary cards, unchanged) */}
+//         </div>
+
+//         {/* Recurring Expenses Table */}
+//         <div className="bg-white shadow rounded-lg overflow-hidden">
+//           <div className="overflow-x-auto">
+//             <table className="min-w-full divide-y divide-gray-200">
+//               <thead className="bg-gray-50">
+//                 <tr>
+//                   {['Id','Description','Amount','Category','Frequency','Next Due','Status','Actions']
+//                     .map((h) => (
+//                       <th
+//                         key={h}
+//                         className="px-4 sm:px-6 py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider"
+//                       >
+//                         {h}
+//                       </th>
+//                   ))}
+//                 </tr>
+//               </thead>
+//               <tbody className="bg-white divide-y divide-gray-200">
+//                 {recurringExpenses.map((expense) => (
+//                   <tr key={expense.id} className="hover:bg-gray-50">
+//                     <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-[11px] sm:text-sm">{expense.id}</td>
+//                     <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-[11px] sm:text-sm">{expense.description}</td>
+//                     <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-[11px] sm:text-sm">
+//                       ${expense.amount.toFixed(2)}
+//                     </td>
+//                     <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-[11px] sm:text-sm">
+//                       <span className="inline-flex px-2 py-1 text-[10px] sm:text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+//                         {expense.type}
+//                       </span>
+//                     </td>
+//                     <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-[11px] sm:text-sm">{expense.frequency}</td>
+//                     <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-[11px] sm:text-sm">{expense.startDate}</td>
+//                     <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-[11px] sm:text-sm">
+//                       <span className={`inline-flex px-2 py-1 text-[10px] sm:text-xs font-semibold rounded-full ${getStatusColor(expense.status)}`}>
+//                         {expense.status}
+//                       </span>
+//                     </td>
+//                     <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-[11px] sm:text-sm">
+//                       <button
+//                         onClick={() => toggleStatus(expense.id)}
+//                         className="text-indigo-600 hover:text-indigo-900 mr-2 sm:mr-4"
+//                       >
+//                         {expense.status === 'Active' ? 'Pause' : 'Activate'}
+//                       </button>
+//                       <button className="text-indigo-600 hover:text-indigo-900 mr-2 sm:mr-4">
+//                         Edit
+//                       </button>
+//                       <button
+//                         onClick={() => handleDelete(expense.id)}
+//                         className="text-red-600 hover:text-red-900"
+//                       >
+//                         Delete
+//                       </button>
+//                     </td>
+//                   </tr>
+//                 ))}
+//               </tbody>
+//             </table>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default RecurringList;
