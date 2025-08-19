@@ -1,35 +1,44 @@
 import { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const AddExpense = () => {
+  const navigate= useNavigate();
   const [formData, setFormData] = useState({
-    name:"",
+    name: '',
     description: '',
     amount: '',
     type: '',
     date: new Date().toISOString().split('T')[0],
+    paymentType: '',
   });
 
   const categories = [
-    'Food & Dining',
-    'Transportation',
-    'Shopping',
-    'Entertainment',
-    'Bills & Utilities',
-    'Healthcare',
-    'Education',
-    'Travel',
-    'Business',
-    'Other'
+    "FOOD",
+    "GROCERY",
+    "CLOTHS",
+    "EDUCATION",
+    "MEDICAL",
+    "INVESTMENT",
+    "COMMON_EXPENSE",
+    "HOME_DECOR",
+    "ACCESSORIES",
+    "RENT",
+    "TRAVEL",
+    "BUSINESS",
+    "OTHER"
   ];
 
-  const paymentMethods = [
-    'Cash',
-    'Credit Card',
-    'Debit Card',
-    'Bank Transfer',
-    'Digital Wallet',
-    'Other'
+  const paymentTypes = [
+    "Cash",
+    "CreditCard",
+    "DebitCard",
+    "BankTransfer",
+    "DigitalWallet",
+    "Other"
   ];
+
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({
@@ -38,20 +47,53 @@ const AddExpense = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle expense submission here
-    console.log('New expense:', formData);
-    // Reset form after submission
-    setFormData({
-      description: '',
-      amount: '',
-      category: '',
-      date: new Date().toISOString().split('T')[0],
-      paymentMethod: '',
-      notes: ''
-    });
+    console.log("✅ handleSubmit called");
+    try {
+      const token = localStorage.getItem("jwtToken");
+      console.log("Sending expense:", formData);
+
+      const response = await axios.post(
+        "http://localhost:8081/expense",
+        formData,
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Expense added:", response.data);
+
+      setFormData({
+        name: '',
+        description: '',
+        amount: '',
+        type: '',
+        date: new Date().toISOString().split('T')[0],
+        paymentType: '',
+      });
+      setError("");
+      navigate("/expenses");
+    } catch (err) {
+      console.error("Error adding expense:", err);
+      setError("Failed, please try again.");
+    }
   };
+
+  const handleCancle = () =>{
+    setFormData({
+      name: '',
+        description: '',
+        amount: '',
+        type: '',
+        date: new Date().toISOString().split('T')[0],
+        paymentType: '',
+    });
+    navigate("/expenses");
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -61,7 +103,24 @@ const AddExpense = () => {
             <h1 className="text-2xl font-bold text-gray-900">Add New Expense</h1>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <form className="p-6 space-y-6" onSubmit={handleSubmit}>
+            {/* Name */}
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                Name *
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Enter expense name"
+                value={formData.name}
+                onChange={handleChange}
+              />
+            </div>
+
             {/* Description */}
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
@@ -104,21 +163,21 @@ const AddExpense = () => {
             {/* Category and Date */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
                   Category *
                 </label>
                 <select
-                  id="category"
-                  name="category"
+                  id="type"
+                  name="type"
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  value={formData.category}
+                  value={formData.type}
                   onChange={handleChange}
                 >
                   <option value="">Select a category</option>
-                  {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
                     </option>
                   ))}
                 </select>
@@ -142,19 +201,19 @@ const AddExpense = () => {
 
             {/* Payment Method */}
             <div>
-              <label htmlFor="paymentMethod" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="paymentType" className="block text-sm font-medium text-gray-700 mb-2">
                 Payment Method *
               </label>
               <select
-                id="paymentMethod"
-                name="paymentMethod"
+                id="paymentType"
+                name="paymentType"
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                value={formData.paymentMethod}
+                value={formData.paymentType}
                 onChange={handleChange}
               >
                 <option value="">Select payment method</option>
-                {paymentMethods.map((method) => (
+                {paymentTypes.map((method) => (
                   <option key={method} value={method}>
                     {method}
                   </option>
@@ -162,28 +221,18 @@ const AddExpense = () => {
               </select>
             </div>
 
-            {/* Notes */}
-            <div>
-              <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
-                Notes (Optional)
-              </label>
-              <textarea
-                id="notes"
-                name="notes"
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Add any additional notes..."
-                value={formData.notes}
-                onChange={handleChange}
-              />
-            </div>
+            {/* Error Message */}
+            {error && (
+              <p className="text-red-500 text-sm">{error}</p>
+            )}
 
             {/* Submit Buttons */}
             <div className="flex justify-end space-x-4">
               <button
                 type="button"
+                onClick={handleCancle}
                 className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
+              >              
                 Cancel
               </button>
               <button

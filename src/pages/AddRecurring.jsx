@@ -1,71 +1,96 @@
+import axios from 'axios';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 const AddRecurring = () => {
+  const navigate = useNavigate();
+
+  // match API body exactly
   const [formData, setFormData] = useState({
+    name: '',
     description: '',
     amount: '',
-    category: '',
     frequency: '',
+    type: '',
+    paymentType:'',
+    status: '',
     startDate: new Date().toISOString().split('T')[0],
-    paymentMethod: '',
-    notes: '',
-    autoDeduct: false
   });
 
   const categories = [
-    'Food & Dining',
-    'Transportation',
-    'Shopping',
-    'Entertainment',
-    'Bills & Utilities',
-    'Healthcare',
-    'Education',
-    'Travel',
-    'Business',
-    'Other'
+    "FOOD",
+    "GROCERY",
+    "CLOTHS",
+    "EDUCATION",
+    "MEDICAL",
+    "INVESTMENT",
+    "COMMON_EXPENSE",
+    "HOME_DECOR",
+    "ACCESSORIES",
+    "RENT",
+    "TRAVEL",
+    "BUSINESS",
+    "OTHER"
+  ];
+
+  const statusOptions = [
+    "Active",
+    "Paused",
+    "Inactive"
   ];
 
   const frequencies = [
     'Weekly',
-    'Bi-weekly',
+    'BiWeekly',
     'Monthly',
     'Quarterly',
-    'Semi-annually',
+    'SemiAnnually',
     'Annually'
   ];
 
-  const paymentMethods = [
-    'Cash',
-    'Credit Card',
-    'Debit Card',
-    'Bank Transfer',
-    'Digital Wallet',
-    'Other'
-  ];
-
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: value
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle recurring expense submission here
-    console.log('New recurring expense:', formData);
-    // Reset form after submission
-    setFormData({
-      description: '',
-      amount: '',
-      category: '',
-      frequency: '',
-      startDate: new Date().toISOString().split('T')[0],
-      paymentMethod: '',
-      notes: '',
-      autoDeduct: false
-    });
+    console.log(formData);
+    try {
+      const token = localStorage.getItem("jwtToken");
+      await axios.post(
+        "http://localhost:8081/expense/RExpense",
+        {
+          ...formData,
+          amount: parseFloat(formData.amount), // backend expects number not string
+        },
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          },
+        }
+      );
+
+      Swal.fire({
+        title: "Created!",
+        text: "Expense Created Success ✅",
+        icon: "success",
+        timer: 2000, // 2 seconds
+        timerProgressBar: true,
+        showConfirmButton: false
+      }).then(() => {
+        navigate("/recurring");
+      });
+
+
+    } catch (err) {
+      console.error(err);
+      Swal.fire("Error", "Failed to create expense ❌", "error");
+    }
   };
 
   return (
@@ -80,18 +105,33 @@ const AddRecurring = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            {/* Name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Name *
+              </label>
+              <input
+                type="text"
+                name="name"
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="e.g., Netflix Subscription"
+                value={formData.name}
+                onChange={handleChange}
+              />
+            </div>
+
             {/* Description */}
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description *
               </label>
               <input
                 type="text"
-                id="description"
                 name="description"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="e.g., Netflix Subscription, Rent Payment"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="Details about the expense"
                 value={formData.description}
                 onChange={handleChange}
               />
@@ -99,152 +139,108 @@ const AddRecurring = () => {
 
             {/* Amount */}
             <div>
-              <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Amount *
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2 text-gray-500">$</span>
-                <input
-                  type="number"
-                  id="amount"
-                  name="amount"
-                  required
-                  step="0.01"
-                  min="0"
-                  className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="0.00"
-                  value={formData.amount}
-                  onChange={handleChange}
-                />
-              </div>
+              <input
+                type="number"
+                name="amount"
+                required
+                step="0.01"
+                min="0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="0.00"
+                value={formData.amount}
+                onChange={handleChange}
+              />
             </div>
 
-            {/* Category and Frequency */}
+            {/* Category (type) and Frequency */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Category *
                 </label>
                 <select
-                  id="category"
-                  name="category"
+                  name="type"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  value={formData.category}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.type}
                   onChange={handleChange}
                 >
-                  <option value="">Select a category</option>
+                  <option value="">Select category</option>
                   {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
+                    <option key={category} value={category}>{category}</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label htmlFor="frequency" className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Frequency *
                 </label>
                 <select
-                  id="frequency"
                   name="frequency"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   value={formData.frequency}
                   onChange={handleChange}
                 >
                   <option value="">Select frequency</option>
-                  {frequencies.map((frequency) => (
-                    <option key={frequency} value={frequency}>
-                      {frequency}
-                    </option>
+                  {frequencies.map((freq) => (
+                    <option key={freq} value={freq}>{freq}</option>
                   ))}
                 </select>
               </div>
             </div>
 
-            {/* Start Date and Payment Method */}
+            {/* Status and Start Date */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Status *
+                </label>
+                <select
+                  name="status"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.status}
+                  onChange={handleChange}
+                >
+                  <option value="">Select status</option>
+                  {statusOptions.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Start Date *
                 </label>
                 <input
                   type="date"
-                  id="startDate"
                   name="startDate"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   value={formData.startDate}
                   onChange={handleChange}
                 />
               </div>
-
-              <div>
-                <label htmlFor="paymentMethod" className="block text-sm font-medium text-gray-700 mb-2">
-                  Payment Method *
-                </label>
-                <select
-                  id="paymentMethod"
-                  name="paymentMethod"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  value={formData.paymentMethod}
-                  onChange={handleChange}
-                >
-                  <option value="">Select payment method</option>
-                  {paymentMethods.map((method) => (
-                    <option key={method} value={method}>
-                      {method}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
 
-            {/* Auto Deduct Checkbox */}
-            <div className="flex items-center">
-              <input
-                id="autoDeduct"
-                name="autoDeduct"
-                type="checkbox"
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                checked={formData.autoDeduct}
-                onChange={handleChange}
-              />
-              <label htmlFor="autoDeduct" className="ml-2 block text-sm text-gray-900">
-                Automatically deduct from balance
-              </label>
-            </div>
-
-            {/* Notes */}
-            <div>
-              <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
-                Notes (Optional)
-              </label>
-              <textarea
-                id="notes"
-                name="notes"
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Add any additional notes about this recurring expense..."
-                value={formData.notes}
-                onChange={handleChange}
-              />
-            </div>
-
-            {/* Submit Buttons */}
+            {/* Buttons */}
             <div className="flex justify-end space-x-4">
               <button
                 type="button"
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                onClick={() => navigate('/recurring')}
+                className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
               >
                 Create Recurring Expense
               </button>

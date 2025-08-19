@@ -1,67 +1,76 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const EditExpense = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
+    name: '',
     description: '',
     amount: '',
-    category: '',
-    date: '',
-    paymentMethod: '',
-    notes: ''
+    type: '',
+    date: new Date().toISOString().split('T')[0],
+    paymentType: '',
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const categories = [
-    'Food & Dining',
-    'Transportation',
-    'Shopping',
-    'Entertainment',
-    'Bills & Utilities',
-    'Healthcare',
-    'Education',
-    'Travel',
-    'Business',
-    'Other'
+    "FOOD", "GROCERY", "CLOTHS", "EDUCATION", "MEDICAL",
+    "INVESTMENT", "COMMON_EXPENSE", "HOME_DECOR",
+    "ACCESSORIES", "RENT", "TRAVEL", "BUSINESS", "OTHER"
   ];
 
   const paymentMethods = [
-    'Cash',
-    'Credit Card',
-    'Debit Card',
-    'Bank Transfer',
-    'Digital Wallet',
-    'Other'
+    "Cash", "CreditCard", "DebitCard", "BankTransfer", "DigitalWallet", "Other"
   ];
 
+  // ✅ Fetch existing expense
   useEffect(() => {
-    // Fetch expense data by ID
-    // This is placeholder data
-    setTimeout(() => {
-      setFormData({
-        description: 'Grocery Shopping',
-        amount: '125.50',
-        category: 'Food & Dining',
-        date: '2024-01-15',
-        paymentMethod: 'Credit Card',
-        notes: 'Weekly grocery shopping at Whole Foods'
-      });
-      setLoading(false);
-    }, 1000);
+    const fetchExpense = async () => {
+      try {
+        const token = localStorage.getItem("jwtToken");
+        const response = await axios.get(`http://localhost:8081/expense/${id}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          }
+        });
+        setFormData(response.data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Failed to fetch expense!", err);
+        setError("Failed to fetch expense");
+        setLoading(false);
+      }
+    };
+
+    fetchExpense();
   }, [id]);
+
+  // ✅ Update on submit
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem("jwtToken");
+      await axios.put(`http://localhost:8081/expense/${id}`, formData, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        }
+      });
+      navigate("/expenses"); // redirect after update
+    } catch (err) {
+      console.error("Update failed", err);
+      setError("Failed to update expense");
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Handle expense update here
-    console.log('Updated expense:', formData);
   };
 
   if (loading) {
@@ -83,18 +92,19 @@ const EditExpense = () => {
             <h1 className="text-2xl font-bold text-gray-900">Edit Expense</h1>
           </div>
 
+          {error && <p className="text-red-500 p-4">{error}</p>}
+
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {/* Description */}
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description *
               </label>
               <input
                 type="text"
-                id="description"
                 name="description"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 placeholder="Enter expense description"
                 value={formData.description}
                 onChange={handleChange}
@@ -103,59 +113,51 @@ const EditExpense = () => {
 
             {/* Amount */}
             <div>
-              <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Amount *
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2 text-gray-500">$</span>
-                <input
-                  type="number"
-                  id="amount"
-                  name="amount"
-                  required
-                  step="0.01"
-                  min="0"
-                  className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="0.00"
-                  value={formData.amount}
-                  onChange={handleChange}
-                />
-              </div>
+              <input
+                type="number"
+                name="amount"
+                required
+                step="0.01"
+                min="0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="0.00"
+                value={formData.amount}
+                onChange={handleChange}
+              />
             </div>
 
             {/* Category and Date */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Category *
                 </label>
                 <select
-                  id="category"
-                  name="category"
+                  name="type"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  value={formData.category}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={formData.type}
                   onChange={handleChange}
                 >
                   <option value="">Select a category</option>
-                  {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Date *
                 </label>
                 <input
                   type="date"
-                  id="date"
                   name="date"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   value={formData.date}
                   onChange={handleChange}
                 />
@@ -164,53 +166,35 @@ const EditExpense = () => {
 
             {/* Payment Method */}
             <div>
-              <label htmlFor="paymentMethod" className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Payment Method *
               </label>
               <select
-                id="paymentMethod"
-                name="paymentMethod"
+                name="paymentType"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                value={formData.paymentMethod}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                value={formData.paymentType}
                 onChange={handleChange}
               >
                 <option value="">Select payment method</option>
                 {paymentMethods.map((method) => (
-                  <option key={method} value={method}>
-                    {method}
-                  </option>
+                  <option key={method} value={method}>{method}</option>
                 ))}
               </select>
-            </div>
-
-            {/* Notes */}
-            <div>
-              <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
-                Notes (Optional)
-              </label>
-              <textarea
-                id="notes"
-                name="notes"
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Add any additional notes..."
-                value={formData.notes}
-                onChange={handleChange}
-              />
             </div>
 
             {/* Submit Buttons */}
             <div className="flex justify-end space-x-4">
               <button
                 type="button"
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                onClick={() => navigate("/expenses")}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="px-4 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
               >
                 Update Expense
               </button>

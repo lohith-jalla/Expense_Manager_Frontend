@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 const ExpensesList = () => {
   const [expenses, setExpenses] = useState([]);
@@ -41,6 +42,28 @@ const ExpensesList = () => {
 
     fetchExpenses();
   }, []);
+
+  const handleDelete = async(e,id) => {
+    e.preventDefault();
+    
+    try{
+      const token = localStorage.getItem("jwtToken");
+
+      const response = await axios.delete(`http://localhost:8081/expense/${id}`,
+        {
+          headers:{
+            "Authorization":`Bearer ${token}`
+          }
+        }
+      )
+      setExpenses(expenses.filter(exp => exp.id !== id));
+      Swal.fire("Deleted!", "Expense removed ✅", "success")
+      console.log(response.data);
+    }catch(e){
+      console.error("Error deleting expense:", err);
+      setError("Failed to delete expense. Please try again.");
+    }
+  }
 
   const filteredExpenses = expenses.filter(expense => {
     const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -124,6 +147,9 @@ const ExpensesList = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Id
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Description
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -146,6 +172,9 @@ const ExpensesList = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredExpenses.map((expense) => (
                 <tr key={expense.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {expense.id}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {expense.description}
                   </td>
@@ -170,7 +199,7 @@ const ExpensesList = () => {
                     >
                       Edit
                     </Link>
-                    <button className="text-red-600 hover:text-red-900">
+                    <button className="text-red-600 hover:text-red-900" onClick={(e) => handleDelete(e, expense.id)}>
                       Delete
                     </button>
                   </td>
