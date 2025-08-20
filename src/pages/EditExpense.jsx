@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 const EditExpense = () => {
   const { id } = useParams();
@@ -59,7 +60,18 @@ const EditExpense = () => {
           "Authorization": `Bearer ${token}`,
         }
       });
-      navigate("/expenses"); // redirect after update
+      
+      Swal.fire({
+          title: "Updated!",
+          text: "Expense Update Success ✅",
+          icon: "success",
+          timer: 1000,
+          timerProgressBar: true,
+          showConfirmButton: false
+      }).then(() => {
+            navigate("/expenses");
+        });
+
     } catch (err) {
       console.error("Update failed", err);
       setError("Failed to update expense");
@@ -95,6 +107,22 @@ const EditExpense = () => {
           {error && <p className="text-red-500 p-4">{error}</p>}
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            {/* Name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Name *
+              </label>
+              <input
+                type="text"
+                name="name"
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="Enter expense name"
+                value={formData.name}
+                onChange={handleChange}
+              />
+            </div>
+
             {/* Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

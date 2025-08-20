@@ -11,6 +11,7 @@ import EditExpense from './pages/EditExpense'
 import RecurringList from './pages/RecurringList'
 import AddRecurring from './pages/AddRecurring'
 import Settings from './pages/Settings'
+import EditRExpense from './pages/EditRExpense'
 
 // Welcome/Home component
 const Home = () => (
@@ -54,6 +55,7 @@ function App() {
             <Route path="/recurring" element={<RecurringList />} />
             <Route path="/add-recurring" element={<AddRecurring />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/edit-Rexpense/:id" element={<EditRExpense />}/>
           </Routes>
         </main>
       </div>

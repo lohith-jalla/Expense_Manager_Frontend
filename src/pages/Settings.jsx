@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 
 const Settings = () => {
+  const [name,setName] = useState("");
+  const [email,setEmail] = useState("");
+  const [budget,setBudget] = useState();
+  const [warningLimit,setWarningLimit] = useState();
   const [settings, setSettings] = useState({
-    // Profile Settings
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    
     // Preferences
     currency: 'USD',
     dateFormat: 'MM/DD/YYYY',
@@ -16,16 +17,36 @@ const Settings = () => {
     reminderNotifications: true,
     weeklyReports: false,
     
-    // Budget Settings
-    monthlyBudget: '2000',
-    budgetWarningThreshold: '80',
-    
     // Privacy
     dataSharing: false,
     analytics: true
   });
 
   const [activeTab, setActiveTab] = useState('profile');
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("jwtToken");
+
+        const response = await axios.get("http://localhost:8080/user/getProfile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        console.log(response.data);
+        setName(response.data.username);
+        setEmail(response.data.email);
+        setBudget(response.data.monthlyLimit);
+        setWarningLimit(80);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchProfile();
+  }, []); 
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -90,9 +111,9 @@ const Settings = () => {
                       type="text"
                       id="name"
                       name="name"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      value={settings.name}
-                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 hover:cursor-not-allowed"
+                      value={name}
+                      readOnly
                     />
                   </div>
 
@@ -104,9 +125,9 @@ const Settings = () => {
                       type="email"
                       id="email"
                       name="email"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      value={settings.email}
-                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 hover:cursor-not-allowed"
+                      value={email}
+                      readOnly
                     />
                   </div>
                 </div>
@@ -157,7 +178,6 @@ const Settings = () => {
                       value={settings.dateFormat}
                       onChange={handleChange}
                     >
-                      <option value="MM/DD/YYYY">MM/DD/YYYY</option>
                       <option value="DD/MM/YYYY">DD/MM/YYYY</option>
                       <option value="YYYY-MM-DD">YYYY-MM-DD</option>
                     </select>
@@ -176,7 +196,6 @@ const Settings = () => {
                     >
                       <option value="light">Light</option>
                       <option value="dark">Dark</option>
-                      <option value="auto">Auto</option>
                     </select>
                   </div>
                 </div>
@@ -260,8 +279,7 @@ const Settings = () => {
                         id="monthlyBudget"
                         name="monthlyBudget"
                         className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        value={settings.monthlyBudget}
-                        onChange={handleChange}
+                        value={budget}
                       />
                     </div>
                   </div>
@@ -276,9 +294,9 @@ const Settings = () => {
                       name="budgetWarningThreshold"
                       min="1"
                       max="100"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                      value={settings.budgetWarningThreshold}
-                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 hover:cursor-not-allowed"
+                      value={warningLimit}
+                      readOnly
                     />
                   </div>
                 </div>

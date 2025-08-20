@@ -227,7 +227,12 @@ const RecurringList = () => {
                     >
                       {expense.status === 'Active' ? 'Pause' : 'Activate'}
                     </button>
-                    <button className="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
+                    <Link 
+                      to={`/edit-Rexpense/${expense.id}`}
+                      className="text-indigo-600 hover:text-indigo-900 mr-4"
+                    >
+                      Edit
+                    </Link>
                     <button
                       onClick={() => handleDelete(expense.id)}
                       className="text-red-600 hover:text-red-900"

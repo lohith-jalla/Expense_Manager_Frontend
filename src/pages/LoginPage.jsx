@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
+import Swal from "sweetalert2";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -33,9 +33,18 @@ export default function LoginPage() {
       console.log(localStorage.getItem("jwtToken"));
 
       setError("");
-      setTimeout(()=>{
+
+      Swal.fire({
+        title: "Logged in!",
+        text: "Login Success ✅",
+        icon: "success",
+        timer: 1000,
+        timerProgressBar: true,
+        showConfirmButton: false
+      }).then(() => {
         navigate("/expenses")
-      },1000);
+      });
+
     } catch (err) {
       console.error("Login error:", err);
       setError("Login failed: " + err.message);

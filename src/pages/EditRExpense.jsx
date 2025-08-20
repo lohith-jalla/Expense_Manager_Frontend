@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams,useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 
 const AddRecurring = () => {
-  const navigate = useNavigate();
-
+    const navigate = useNavigate();
+    const { id } = useParams();
   // match API body exactly
   const [formData, setFormData] = useState({
     name: '',
@@ -58,6 +58,23 @@ const AddRecurring = () => {
     'Annually'
   ];
 
+  useEffect(()=>{
+    const fetchRexpenses = async() =>{
+        
+        const token = localStorage.getItem("jwtToken");
+        const response = await axios.get(`http://localhost:8081/expense/RExpense/${id}`,{
+            headers:{
+                "Authorization":`Bearer ${token}`
+            },
+        });
+
+        console.log(response.data);
+        setFormData(response.data);
+    };
+    fetchRexpenses();
+  },[]);
+
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -72,8 +89,8 @@ const AddRecurring = () => {
     try {
       const token = localStorage.getItem("jwtToken");
       formData.amount=parseFloat(formData.amount);
-      await axios.post(
-        "http://localhost:8081/expense/RExpense",
+      await axios.put(
+        `http://localhost:8081/expense/RExpense/${id}`,
           formData,
         {
           headers: {
@@ -83,10 +100,10 @@ const AddRecurring = () => {
       );
 
       Swal.fire({
-        title: "Created!",
-        text: "Expense Created Success ✅",
+        title: "Updated!",
+        text: "Recurring Expense Updated Success ✅",
         icon: "success",
-        timer: 1500, // 2 seconds
+        timer: 1500,
         timerProgressBar: true,
         showConfirmButton: false
       }).then(() => {
@@ -97,7 +114,14 @@ const AddRecurring = () => {
     } catch (err) {
       console.error(err);
       console.log(formData);
-      Swal.fire("Error", "Failed to create expense ❌", "error");
+      Swal.fire({
+        title:"Error",
+        text: "Failed to Update expense ❌", 
+        icon:"error",
+        timer:1500,
+        timerProgressBar:true,
+        showConfirmButton: false
+    });
     }
   };
 
@@ -106,10 +130,7 @@ const AddRecurring = () => {
       <div className="max-w-2xl mx-auto">
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">Add Recurring Expense</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Set up an expense that repeats automatically at regular intervals.
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900">Update Recurring Expense</h1>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -271,7 +292,7 @@ const AddRecurring = () => {
                 type="submit"
                 className="px-4 py-2 rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
               >
-                Create Recurring Expense
+                Update
               </button>
             </div>
           </form>

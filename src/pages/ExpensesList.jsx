@@ -57,7 +57,16 @@ const ExpensesList = () => {
         }
       )
       setExpenses(expenses.filter(exp => exp.id !== id));
-      Swal.fire("Deleted!", "Expense removed ✅", "success")
+      Swal.fire({
+        title: "Deleted!",
+        text: "Expense Deleted Success ✅",
+        icon: "success",
+        timer: 1000,
+        timerProgressBar: true,
+        showConfirmButton: false
+      }).then(() => {
+        navigate("/expenses");
+      });
       console.log(response.data);
     }catch(e){
       console.error("Error deleting expense:", err);
@@ -150,6 +159,9 @@ const ExpensesList = () => {
                   Id
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Description
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -174,6 +186,9 @@ const ExpensesList = () => {
                 <tr key={expense.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {expense.id}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {expense.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {expense.description}
