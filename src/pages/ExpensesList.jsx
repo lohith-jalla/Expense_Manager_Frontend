@@ -10,6 +10,23 @@ const ExpensesList = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [error, setError] = useState('');
 
+  const fixedCategories = [
+    "all",
+    "FOOD",
+    "GROCERY",
+    "CLOTHS",
+    "EDUCATION",
+    "MEDICAL",
+    "INVESTMENT",
+    "COMMON_EXPENSE",
+    "HOME_DECOR",
+    "ACCESSORIES",
+    "RENT",
+    "TRAVEL",
+    "BUSINESS",
+    "OTHER"
+  ];
+
   useEffect(() => {
     const fetchExpenses = async () => {
       try {
@@ -140,7 +157,7 @@ const ExpensesList = () => {
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
-                {categories.map(category => (
+                {fixedCategories.map(category => (
                   <option key={category} value={category}>
                     {category === 'all' ? 'All Categories' : category}
                   </option>

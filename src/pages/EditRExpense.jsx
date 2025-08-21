@@ -62,13 +62,13 @@ const AddRecurring = () => {
     const fetchRexpenses = async() =>{
         
         const token = localStorage.getItem("jwtToken");
+        console.log(formData);
         const response = await axios.get(`http://localhost:8081/expense/RExpense/${id}`,{
             headers:{
                 "Authorization":`Bearer ${token}`
             },
         });
 
-        console.log(response.data);
         setFormData(response.data);
     };
     fetchRexpenses();
@@ -89,6 +89,7 @@ const AddRecurring = () => {
     try {
       const token = localStorage.getItem("jwtToken");
       formData.amount=parseFloat(formData.amount);
+      console.log(id);
       await axios.put(
         `http://localhost:8081/expense/RExpense/${id}`,
           formData,
