@@ -91,6 +91,49 @@ const ExpensesList = () => {
     }
   }
 
+  const handleExport = async(e) =>{
+    e.preventDefault();
+
+    try{
+      const token = localStorage.getItem("jwtToken");
+      const response = await axios.get("http://localhost:8081/expense/export/excel",
+        {
+          headers:{
+            "Authorization":`Bearer ${token}`
+          },
+          responseType :"blob"
+        }
+      );
+
+      const blob = new Blob([response.data], { type: "application/vnd.ms-excel" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "expenses.xlsx"); // default file name
+      document.body.appendChild(link);
+      link.click();
+
+    // Cleanup
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+    }catch(err){
+       console.error("Export error:", err);
+  
+  // Only keep the message string, not the full error object
+  setError(err.response?.data?.message || err.message || "Unknown error");
+
+      Swal.fire({
+        title:"Error Exporting!",
+        text:"Please Try Again",
+        icon:"error",
+        timer: 1000,
+        timerProgressBar: true,
+        showConfirmButton: false
+      });
+    }
+  }
+
   const filteredExpenses = expenses.filter(expense => {
     const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || expense.category === selectedCategory;
@@ -133,7 +176,7 @@ const ExpensesList = () => {
 
         {/* Filters */}
         <div className="bg-white p-6 rounded-lg shadow mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div>
               <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
                 Search
@@ -164,7 +207,16 @@ const ExpensesList = () => {
                 ))}
               </select>
             </div>
+            <div className='flex content-center items-center pl-8 pt-5'>
+              <button className="p-2 rounded-md
+               text-white hover:bg-indigo-700 bg-indigo-600"
+                onClick={handleExport}
+               >
+                  Export to Excel
+              </button>
+            </div>
           </div>
+            
         </div>
 
         {/* Expenses Table */}
