@@ -43,8 +43,8 @@ const ExpensesList = () => {
           }
         });
 
-        // Fix: Access content from Page<Expense>
         setExpenses(response.data.content); 
+        console.log(response.data.content);
       } catch (err) {
         if (err.response && err.response.status === 401) {
           setError("Unauthorized. Please login again.");
@@ -60,19 +60,18 @@ const ExpensesList = () => {
     fetchExpenses();
   }, []);
 
-  const handleDelete = async(e,id) => {
+  const handleDelete = async (e, id) => {
     e.preventDefault();
-    
-    try{
+
+    try {
       const token = localStorage.getItem("jwtToken");
 
-      const response = await axios.delete(`http://localhost:8081/expense/${id}`,
-        {
-          headers:{
-            "Authorization":`Bearer ${token}`
-          }
+      const response = await axios.delete(`http://localhost:8081/expense/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
         }
-      )
+      });
+
       setExpenses(expenses.filter(exp => exp.id !== id));
       Swal.fire({
         title: "Deleted!",
@@ -81,66 +80,55 @@ const ExpensesList = () => {
         timer: 1000,
         timerProgressBar: true,
         showConfirmButton: false
-      }).then(() => {
-        navigate("/expenses");
       });
       console.log(response.data);
-    }catch(e){
+    } catch (err) {
       console.error("Error deleting expense:", err);
       setError("Failed to delete expense. Please try again.");
     }
-  }
+  };
 
-  const handleExport = async(e) =>{
+  const handleExport = async (e) => {
     e.preventDefault();
 
-    try{
+    try {
       const token = localStorage.getItem("jwtToken");
-      const response = await axios.get("http://localhost:8081/expense/export/excel",
-        {
-          headers:{
-            "Authorization":`Bearer ${token}`
-          },
-          responseType :"blob"
-        }
-      );
+      const response = await axios.get("http://localhost:8081/expense/export/excel", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        responseType: "blob"
+      });
 
       const blob = new Blob([response.data], { type: "application/vnd.ms-excel" });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "expenses.xlsx"); // default file name
+      link.setAttribute("download", "expenses.xlsx");
       document.body.appendChild(link);
       link.click();
-
-    // Cleanup
       link.remove();
       window.URL.revokeObjectURL(url);
-
-    }catch(err){
-       console.error("Export error:", err);
-  
-  // Only keep the message string, not the full error object
-  setError(err.response?.data?.message || err.message || "Unknown error");
+    } catch (err) {
+      console.error("Export error:", err);
+      setError(err.response?.data?.message || err.message || "Unknown error");
 
       Swal.fire({
-        title:"Error Exporting!",
-        text:"Please Try Again",
-        icon:"error",
+        title: "Error Exporting!",
+        text: "Please Try Again",
+        icon: "error",
         timer: 1000,
         timerProgressBar: true,
         showConfirmButton: false
       });
     }
-  }
+  };
 
   const filteredExpenses = expenses.filter(expense => {
     const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || expense.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
-
-  const categories = ['all', ...new Set(expenses.map(expense => expense.category))];
 
   if (loading) {
     return (
@@ -162,21 +150,22 @@ const ExpensesList = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Expenses List</h1>
-          <Link 
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Expenses List</h1>
+          <Link
             to="/add-expense"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200 w-full sm:w-auto text-center"
           >
             Add New Expense
           </Link>
         </div>
 
         {/* Filters */}
-        <div className="bg-white p-6 rounded-lg shadow mb-6">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
                 Search
@@ -184,7 +173,7 @@ const ExpensesList = () => {
               <input
                 type="text"
                 id="search"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base"
                 placeholder="Search expenses..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -196,7 +185,7 @@ const ExpensesList = () => {
               </label>
               <select
                 id="category"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
@@ -207,90 +196,68 @@ const ExpensesList = () => {
                 ))}
               </select>
             </div>
-            <div className='flex content-center items-center pl-8 pt-5'>
-              <button className="p-2 rounded-md
-               text-white hover:bg-indigo-700 bg-indigo-600"
+            <div className="flex items-end">
+              <button
+                className="w-full sm:w-auto px-4 py-2 rounded-md text-white hover:bg-indigo-700 bg-indigo-600"
                 onClick={handleExport}
-               >
-                  Export to Excel
+              >
+                Export to Excel
               </button>
             </div>
           </div>
-            
         </div>
 
         {/* Expenses Table */}
         <div className="bg-white shadow rounded-lg overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Id
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Description
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Payment Method
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredExpenses.map((expense) => (
-                <tr key={expense.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {expense.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {expense.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {expense.description}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${expense.amount.toFixed(2)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                      {expense.type}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {expense.date}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {expense.paymentType==null ? "None" : expense.paymentType}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <Link 
-                      to={`/edit-expense/${expense.id}`}
-                      className="text-indigo-600 hover:text-indigo-900 mr-4"
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 text-xs sm:text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  {["Id", "Name", "Description", "Amount", "Category", "Date", "Payment Method", "Actions"].map((header) => (
+                    <th
+                      key={header}
+                      className="px-4 sm:px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider text-xs sm:text-sm"
                     >
-                      Edit
-                    </Link>
-                    <button className="text-red-600 hover:text-red-900" onClick={(e) => handleDelete(e, expense.id)}>
-                      Delete
-                    </button>
-                  </td>
+                      {header}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredExpenses.map((expense) => (
+                  <tr key={expense.id} className="hover:bg-gray-50">
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap font-medium text-gray-900">{expense.id}</td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap font-medium text-gray-900">{expense.name}</td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap font-medium text-gray-900">{expense.description}</td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-gray-900">${expense.amount.toFixed(2)}</td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-gray-900">
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                        {expense.type}
+                      </span>
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-gray-900">{expense.date}</td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-gray-900">
+                      {expense.paymentType == null ? "None" : expense.paymentType}
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap font-medium">
+                      <Link
+                        to={`/edit-expense/${expense.id}`}
+                        className="text-indigo-600 hover:text-indigo-900 mr-2 sm:mr-4"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        className="text-red-600 hover:text-red-900"
+                        onClick={(e) => handleDelete(e, expense.id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
