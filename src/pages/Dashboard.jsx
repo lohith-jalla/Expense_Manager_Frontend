@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -9,26 +10,52 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    // Fetch dashboard data here
-    // This is placeholder data
-    setStats({
-      totalExpenses: 5420.50,
-      monthlyExpenses: 1280.30,
-      weeklyExpenses: 320.75,
-      categorySplit: [
-        { name: 'Food', amount: 450.20, percentage: 35 },
-        { name: 'Transport', amount: 230.50, percentage: 18 },
-        { name: 'Entertainment', amount: 180.30, percentage: 14 },
-        { name: 'Utilities', amount: 419.30, percentage: 33 }
-      ]
-    });
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem("jwtToken");
+        const headers = { Authorization: `Bearer ${token}` };
+
+        // 👇 Fetch APIs
+        const totalRes = await axios.get("http://localhost:8081/expense/progress", { headers });
+        const monthlyRes = await axios.get("http://localhost:8081/expense/monthly-summary", { headers });
+        const weeklyRes = await axios.get("http://localhost:8081/expense/weekly-summary", { headers });
+        const categoryRes = await axios.get("http://localhost:8081/expense/summary/type", { headers });
+
+        // Extract total from progress (sum all totals in content array)
+        const totalExpenses = totalRes.data.content.reduce((acc, item) => acc + item.total, 0);
+
+        // Extract latest month from monthly summary
+        const monthlyKeys = Object.keys(monthlyRes.data);
+        const latestMonth = monthlyKeys[monthlyKeys.length - 1];
+        const monthlyExpenses = monthlyRes.data[latestMonth] || 0;
+
+        // Extract latest week from weekly summary
+        const weeklyKeys = Object.keys(weeklyRes.data);
+        const latestWeek = weeklyKeys[weeklyKeys.length - 1];
+        const weeklyExpenses = weeklyRes.data[latestWeek] || 0;
+
+        // Category breakdown → expected array of { name, amount, percentage }
+        const categorySplit = categoryRes.data || [];
+
+        setStats({
+          totalExpenses,
+          monthlyExpenses,
+          weeklyExpenses,
+          categorySplit
+        });
+      } catch (err) {
+        console.error("Error fetching dashboard stats:", err);
+      }
+    };
+
+    fetchStats();
   }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
-        
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white overflow-hidden shadow rounded-lg">
