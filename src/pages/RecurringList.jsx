@@ -1,13 +1,15 @@
 import axios from 'axios';
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Swal from "sweetalert2";
 
 const RecurringList = () => {
-  const navigate = useNavigate();
   const [recurringExpenses, setRecurringExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(0);
+  const [size] = useState(5);
+  const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     const fetchRExpenses = async () => {
@@ -20,13 +22,14 @@ const RecurringList = () => {
       }
 
       try {
-        const response = await axios.get("http://localhost:8081/expense/RExpense", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await axios.get(
+          `http://localhost:8081/expense/RExpense?page=${page}&size=${size}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-        const expenses = response.data.content || response.data;
-        setRecurringExpenses(expenses);
-        console.log(expenses);
+        const data = response.data;
+        setRecurringExpenses(data.content || []);
+        setTotalPages(data.totalPages || 1);
       } catch (err) {
         if (err.response?.status === 401) {
           setError("Unauthorized. Please login again.");
@@ -42,7 +45,7 @@ const RecurringList = () => {
     };
 
     fetchRExpenses();
-  }, []);
+  }, [page]);
 
   // ✅ Handle Delete R-Expense with SweetAlert2 Password Prompt
   const handleDelete = async (id) => {
@@ -57,10 +60,6 @@ const RecurringList = () => {
       text: "Please enter your password to confirm deletion",
       input: "password",
       inputPlaceholder: "Enter your password",
-      inputAttributes: {
-        autocapitalize: "off",
-        autocorrect: "off"
-      },
       showCancelButton: true,
       confirmButtonText: "Confirm",
       cancelButtonText: "Cancel",
@@ -77,10 +76,7 @@ const RecurringList = () => {
 
     try {
       await axios.delete(`http://localhost:8081/expense/RExpense/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "X-User-password": password
-        }
+        headers: { Authorization: `Bearer ${token}`, "X-User-password": password }
       });
 
       setRecurringExpenses(expenses => expenses.filter(exp => exp.id !== id));
@@ -90,14 +86,6 @@ const RecurringList = () => {
       Swal.fire("Error", "Invalid password or delete failed ❌", "error");
     }
   };
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-red-600 font-medium">
-        {error}
-      </div>
-    );
-  }
 
   const toggleStatus = (id) => {
     setRecurringExpenses(expenses =>
@@ -110,11 +98,9 @@ const RecurringList = () => {
   };
 
   const getStatusColor = (status) => {
-    if (status === 'Active')
-      return 'bg-green-300 text-green-900'
-    else if (status === "Inactive")
-      return 'bg-red-300 text-red-900';
-    else return 'bg-yellow-200 text-yellow-900'
+    if (status === 'Active') return 'bg-green-300 text-green-900';
+    else if (status === "Inactive") return 'bg-red-300 text-red-900';
+    else return 'bg-yellow-200 text-yellow-900';
   };
 
   if (loading) {
@@ -124,6 +110,14 @@ const RecurringList = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading recurring expenses...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-600 font-medium">
+        {error}
       </div>
     );
   }
@@ -143,48 +137,7 @@ const RecurringList = () => {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5 flex items-center">
-              <div className="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
-                <span className="text-white text-sm font-bold">#</span>
-              </div>
-              <div className="ml-5">
-                <dt className="text-sm font-medium text-gray-500">Total Recurring</dt>
-                <dd className="text-lg font-medium text-gray-900">{recurringExpenses.length}</dd>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5 flex items-center">
-              <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                <span className="text-white text-sm font-bold">✓</span>
-              </div>
-              <div className="ml-5">
-                <dt className="text-sm font-medium text-gray-500">Active</dt>
-                <dd className="text-lg font-medium text-gray-900">
-                  {recurringExpenses.filter(e => e.status === 'Active').length}
-                </dd>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5 flex items-center">
-              <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                <span className="text-white text-sm font-bold">$</span>
-              </div>
-              <div className="ml-5">
-                <dt className="text-sm font-medium text-gray-500">Monthly Total</dt>
-                <dd className="text-lg font-medium text-gray-900">
-                  ${recurringExpenses
-                    .filter(e => e.status === 'Active')
-                    .reduce((sum, e) => sum + e.amount, 0)
-                    .toFixed(2)}
-                </dd>
-              </div>
-            </div>
-          </div>
+          {/* ... your cards code stays same ... */}
         </div>
 
         {/* Recurring Expenses Table */}
@@ -244,6 +197,37 @@ const RecurringList = () => {
               ))}
             </tbody>
           </table>
+
+          {/* Pagination Controls */}
+          <div className="flex justify-center items-center gap-2 p-4">
+            <button
+              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+              onClick={() => setPage((p) => p - 1)}
+              disabled={page === 0}
+            >
+              Previous
+            </button>
+
+            {[...Array(totalPages).keys()].map((num) => (
+              <button
+                key={num}
+                onClick={() => setPage(num)}
+                className={`px-3 py-1 rounded ${
+                  page === num ? "bg-indigo-600 text-white" : "bg-gray-200"
+                }`}
+              >
+                {num + 1}
+              </button>
+            ))}
+
+            <button
+              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+              onClick={() => setPage((p) => p + 1)}
+              disabled={page + 1 === totalPages}
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import {
 } from "recharts";
 
 const API_BASE = "http://localhost:8081/expense";
+const API_BASE_2= "http://localhost:8080/user";
 
 // Nice, distinct palette
 const COLORS = ["#4f46e5", "#22c55e", "#f97316", "#06b6d4", "#ef4444", "#a855f7", "#10b981", "#f59e0b"];
@@ -59,11 +60,12 @@ const Dashboard = () => {
         const token = localStorage.getItem("jwtToken");
         const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-        const [progressRes, monthlyRes, weeklyRes, categoryRes] = await Promise.all([
+        const [progressRes, monthlyRes, weeklyRes, categoryRes , Limit] = await Promise.all([
           axios.get(`${API_BASE}/progress`, { headers }),
           axios.get(`${API_BASE}/monthly-summary`, { headers }),
           axios.get(`${API_BASE}/weekly-summary`, { headers }),
           axios.get(`${API_BASE}/summary/type`, { headers }),
+          axios.get(`${API_BASE_2}/getLimit`,{ headers })
         ]);
 
         setProgressPage(progressRes?.data ?? null);
@@ -163,19 +165,19 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-2xl shadow p-5">
             <div className="text-sm text-gray-500">Total Expenses</div>
-            <div className="text-xl font-semibold mt-1">{currency(totalExpenses)}</div>
+            <div className="text-xl font-extrabold mt-1">{currency(totalExpenses)}</div>
           </div>
           <div className="bg-white rounded-2xl shadow p-5">
             <div className="text-sm text-gray-500">This Month</div>
-            <div className="text-xl font-semibold mt-1">{currency(monthlyLatest)}</div>
+            <div className="text-xl font-extrabold mt-1">{currency(monthlyLatest)}</div>
           </div>
           <div className="bg-white rounded-2xl shadow p-5">
             <div className="text-sm text-gray-500">This Week</div>
-            <div className="text-xl font-semibold mt-1">{currency(weeklyLatest)}</div>
+            <div className="text-xl font-extrabold mt-1">{currency(weeklyLatest)}</div>
           </div>
           <div className="bg-white rounded-2xl shadow p-5">
             <div className="text-sm text-gray-500">Top Category</div>
-            <div className="text-xl font-semibold mt-1">
+            <div className="text-xl font-extrabold mt-1">
               {topCategory.name} {topCategory.value ? `· ${currency(topCategory.value)}` : ""}
             </div>
           </div>

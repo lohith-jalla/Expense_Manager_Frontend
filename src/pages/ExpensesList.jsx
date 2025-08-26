@@ -10,6 +10,11 @@ const ExpensesList = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [error, setError] = useState('');
 
+  // pagination states
+  const [page, setPage] = useState(0);
+  const [size] = useState(4); // fixed size
+  const [totalPages, setTotalPages] = useState(0);
+
   const fixedCategories = [
     "all",
     "FOOD",
@@ -37,14 +42,14 @@ const ExpensesList = () => {
           return;
         }
 
-        const response = await axios.get("http://localhost:8081/expense", {
+        const response = await axios.get(`http://localhost:8081/expense?page=${page}&size=${size}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
 
-        setExpenses(response.data.content); 
-        console.log(response.data.content);
+        setExpenses(response.data.content);
+        setTotalPages(response.data.totalPages);
       } catch (err) {
         if (err.response && err.response.status === 401) {
           setError("Unauthorized. Please login again.");
@@ -58,7 +63,7 @@ const ExpensesList = () => {
     };
 
     fetchExpenses();
-  }, []);
+  }, [page, size , expenses]);
 
   const handleDelete = async (e, id) => {
     e.preventDefault();
@@ -229,7 +234,7 @@ const ExpensesList = () => {
                     <td className="px-4 sm:px-6 py-4 whitespace-nowrap font-medium text-gray-900">{expense.id}</td>
                     <td className="px-4 sm:px-6 py-4 whitespace-nowrap font-medium text-gray-900">{expense.name}</td>
                     <td className="px-4 sm:px-6 py-4 whitespace-nowrap font-medium text-gray-900">{expense.description}</td>
-                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-gray-900">${expense.amount.toFixed(2)}</td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-gray-900">₹{expense.amount.toFixed(2)}</td>
                     <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-gray-900">
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                         {expense.type}
@@ -258,6 +263,37 @@ const ExpensesList = () => {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* Pagination */}
+        <div className="flex justify-center items-center gap-2 mt-4 flex-wrap">
+          <button
+            onClick={() => setPage((p) => Math.max(p - 1, 0))}
+            disabled={page === 0}
+            className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+          >
+            Prev
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i}
+              onClick={() => setPage(i)}
+              className={`px-3 py-1 rounded ${
+                i === page ? "bg-indigo-600 text-white" : "bg-gray-100"
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
+            disabled={page === totalPages - 1}
+            className="px-3 py-1 rounded bg-gray-200 disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>

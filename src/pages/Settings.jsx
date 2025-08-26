@@ -8,7 +8,7 @@ const Settings = () => {
   const [warningLimit,setWarningLimit] = useState();
   const [settings, setSettings] = useState({
     // Preferences
-    currency: 'USD',
+    currency: 'INR',
     dateFormat: 'MM/DD/YYYY',
     theme: 'light',
     
