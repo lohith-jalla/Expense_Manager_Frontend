@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import {
-  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
+  Tooltip, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   BarChart, Bar,
 } from "recharts";
+
+import { ResponsivePie } from "@nivo/pie";
 
 const API_BASE = "http://localhost:8081/expense";
 const API_BASE_2= "http://localhost:8080/user";
@@ -14,7 +16,7 @@ const COLORS = ["#4f46e5", "#22c55e", "#f97316", "#06b6d4", "#ef4444", "#a855f7"
 
 // --- helpers ---
 const currency = (n) =>
-  (Number.isFinite(n) ? n : 0).toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+  (Number.isFinite(n) ? n : 0).toLocaleString(undefined, { style: "currency", currency: "INR", maximumFractionDigits: 2 });
 
 // try to sort month keys like "Jan", "Feb", "Aug 2025", "2025-08", etc.
 const sortMonthKeys = (keys) => {
@@ -177,7 +179,7 @@ const Dashboard = () => {
           </div>
           <div className="bg-white rounded-2xl shadow p-5">
             <div className="text-sm text-gray-500">Top Category</div>
-            <div className="text-xl font-extrabold mt-1">
+            <div className="text-xl font-extrabold mt-1 text-green-600">
               {topCategory.name} {topCategory.value ? `· ${currency(topCategory.value)}` : ""}
             </div>
           </div>
@@ -185,27 +187,44 @@ const Dashboard = () => {
 
         {/* Charts grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {/* Category Pie */}
           <div className="bg-white rounded-2xl shadow p-10">
             <h2 className="text-lg font-semibold mb-4">Category Breakdown</h2>
             {categoryData.length ? (
-              <ResponsiveContainer width="100%" height={320}>
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    dataKey="value"
-                    nameKey="name"
-                    outerRadius={100}
-                    label={({ name, pct }) => `${name} ${pct.toFixed(1)}%`}
-                  >
-                    {categoryData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(v, n, p) => [currency(v), p?.payload?.name]} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
+              <div style={{ height: 320 }}>
+                <ResponsivePie
+                  data={categoryData.map((c) => ({
+                    id: c.name,
+                    label: c.name,
+                    value: c.value,
+                  }))}
+                  margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
+                  innerRadius={0.5} // donut style
+                  padAngle={1}
+                  cornerRadius={3}
+                  activeOuterRadiusOffset={8}
+                  colors={{ scheme: "set2" }} // nice color palette
+                  borderWidth={1}
+                  borderColor={{ from: "color", modifiers: [["darker", 0.2]] }}
+                  arcLinkLabelsSkipAngle={10}
+                  arcLinkLabelsTextColor="#333"
+                  arcLinkLabelsThickness={2}
+                  arcLinkLabelsColor={{ from: "color" }}
+                  arcLabelsSkipAngle={10}
+                  arcLabelsTextColor={{ from: "color", modifiers: [["darker", 2]] }}
+                  tooltip={({ datum }) => (
+                    <div
+                      style={{
+                        padding: "6px 9px",
+                        background: "white",
+                        border: "1px solid #ddd",
+                        borderRadius: "6px",
+                      }}
+                    >
+                      <strong>{datum.id}</strong>: {currency(datum.value)}
+                    </div>
+                  )}
+                />
+              </div>
             ) : (
               <div className="text-gray-500 text-sm">No category data.</div>
             )}
