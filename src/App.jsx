@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 
+
 // Import all pages
 import Dashboard from './pages/Dashboard'
 import LoginPage from './pages/LoginPage'
@@ -12,6 +13,7 @@ import RecurringList from './pages/RecurringList'
 import AddRecurring from './pages/AddRecurring'
 import Settings from './pages/Settings'
 import EditRExpense from './pages/EditRExpense'
+import OAuth2Redirect from './pages/OAuthRedirect'
 
 // Welcome/Home component
 const Home = () => (
@@ -56,6 +58,7 @@ function App() {
             <Route path="/add-recurring" element={<AddRecurring />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/edit-Rexpense/:id" element={<EditRExpense />}/>
+            <Route path="/oauth2/redirect" element={<OAuth2Redirect />} />
           </Routes>
         </main>
       </div>

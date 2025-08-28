@@ -9,6 +9,11 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const handleOAuth = async (e) =>{
+    e.preventDefault();
+    window.location.href = "http://localhost:8080/oauth2/authorization/google";
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -94,6 +99,15 @@ export default function LoginPage() {
             className="bg-indigo-600 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Logging in..." : "Login"}
+          </button>
+
+
+          <button
+            onClick={handleOAuth}
+            disabled={loading}
+            className="bg-indigo-600 text-white font-semibold py-3 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? "Logging in..." : "Login with Google"}
           </button>
 
           {error && (
