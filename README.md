@@ -1,12 +1,69 @@
-# React + Vite
+# 💰 Expense Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack Expense Tracker application built with **React (frontend)** and **Spring Boot (backend)**.  
+This app helps users manage daily expenses, track recurring payments, and generate reports with ease.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Features
 
-## Expanding the ESLint configuration
+- 🔐 **User Authentication** (Register & Login)
+- 🧾 **Add, Edit, Delete Expenses**
+- ♻️ **Recurring Expense Management**
+- 📊 **Weekly & Monthly Reports**
+- 📈 **Dashboard with Visual Insights**
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 🖼️ Screenshots
+
+### 🔑 Register Page
+![Register](./images/Register.png)
+
+### 📊 Dashboard
+![Dashboard](./images/Dashboard.png)
+
+### 💵 Expenses
+![Expenses](./images/Expenses.png)
+
+### 🔁 Recurring Expenses
+![Recurring Expenses](./images/Recurring_Expenses.png)
+
+### 📑 Weekly Report
+![Weekly Report](./images/Weekly_Report.png)
+
+---
+
+## 🛠️ Tech Stack
+
+**Frontend:** React, TailwindCSS  
+**Backend:** Spring Boot, Spring Security, JPA  
+**Database:** MySQL  
+**Authentication:** JWT  
+
+---
+
+## ⚙️ Setup & Installation
+
+### 1️⃣ Clone the repository
+```bash
+git clone https://github.com/your-username/expense-tracker.git
+cd expense-tracker
+```
+### 2️⃣ Install frontend dependencies
+```bash
+npm install
+```
+### 3️⃣ Run backend (Spring Boot)
+  #### please find backend code here https://github.com/lohith-jalla/Expense_Manager 
+```bash
+./mvnw spring-boot:run
+```
+### 4️⃣ Start frontend
+```bash
+npm start
+```
+### 5️⃣ Open in Browser
+```bash
+👉 http://localhost:5173/
+```
